@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<link rel="stylesheet" href="http://bootswatch.com/flatly/bootstrap.css"/>
+		<link rel="stylesheet" href="assets/css/custom.css" />
+	</head>
+
+	<body>
+		<div id="app">
+			<div class="row">
+				<div class="col-lg-8">
+					<div class="page-header">
+						<h2>Router Basic - 01</h2>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-lg-2">
+					<div class="list-group">
+						<!--使用指令v-link进行导航-->
+						<a class="list-group-item" v-link="{ path: '/vlan'}">Vlan</a>
+						<a class="list-group-item" v-link="{ path: '/fdb'}">FDB</a>
+						<a class="list-group-item" v-link="{ path: '/vlan'}">Vlan</a>
+						<a class="list-group-item" v-link="{ path: '/fdb'}">FDB</a>
+						<a class="list-group-item" v-link="{ path: '/vlan'}">Vlan</a>
+						<a class="list-group-item" v-link="{ path: '/fdb'}">FDB</a>
+					</div>
+				</div>
+				<div class="col-lg-9">
+					<div class="panel">
+						<div class="panel-body">
+							<!--用于渲染匹配的组件-->
+							<router-view></router-view>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<template id="vlan">
+			<div>
+				<h1>Vlan</h1>
+				<p>{{msg}}</p>
+			</div>
+		</template>
+		<template id="fdb">
+			<div id="fff">
+				<h1>FDB</h1>
+				<div class="container">
+					<simple-grid :data-list="gridData" :columns="gridColumns">
+					</simple-grid>
+				</div>
+			</div>
+		</template>
+		<template id="grid-template">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th v-for="col in columns">
+							{{ col | capitalize}}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="(index,entry) in dataList">
+						<td v-for="col in columns">
+							{{entry[col]}}
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</template>
+	</body>
+	<script src="js/vue.js"></script>
+	<script src="js/vue-router.js"></script>
+	<script src="js/vue-resource.js"></script>
+	<script>
+		Vue.component('simple-grid', {
+			template: '#grid-template',
+			props: ['dataList', 'columns']
+		})
+	</script>
+	<script>
+		/* 创建组件构造器  */
+
+
+		var Vlan = Vue.extend({
+			template: '#vlan',
+			data: function() {
+				return {
+					msg: 'Hello, vue router!',
+				}
+			}
+		})
+
+		var FDB = Vue.extend({
+			template: '#fdb',
+			data: function() {
+				return {
+					/*
+					interface: "1/1",
+					vlan_id: 1,
+					mac: "00:11:22:33:44:55",
+					entry_type: "learned"
+					*/
+					gridColumns: ['Interface', 'VlanID', 'Mac', 'entryType'],
+					gridData: [],
+					apiUrl: 'http://127.0.0.1/DNI/ICOS_RESTful/icos_sample_api.php'
+				}
+			},
+			ready: function() {
+				this.getCustomers()
+			},
+			methods: {
+				getCustomers: function() {
+					this.$http.get(this.apiUrl)
+						.then((response) => {
+							this.$set('gridData', JSON.parse(response.data))
+						})
+						.catch(function(response) {
+							console.log(response)
+						})
+				}
+			}
+		})
+
+		
+
+		/* 创建路由器  */
+		var router = new VueRouter()
+		
+		/* 创建路由映射  */
+		router.map({
+			'/vlan': {
+				component: Vlan
+			},
+			'/fdb': {
+				component: FDB
+			}
+		})
+		
+		router.redirect({
+			'/': '/vlan'
+		})
+
+		/* 启动路由  */
+		var App = Vue.extend({})
+		router.start(App, '#app')
+	</script>
+
+</html>
